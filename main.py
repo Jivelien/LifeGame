@@ -1,62 +1,52 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 11 16:43:46 2019
-
-@author: jude
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-canvaHeight = 50 # px
-canvaWidth = 50 # px
- 
-global cellBornMin, cellBornMax, cellOverpop
 
+global canvaY, canvaX, cellBornMin, cellBornMax, cellOverpop
+
+canvaY = 50 # px
+canvaX = 50 # px
 cellOverpop = 3
 cellBornMin = 2
 cellSolitude = cellBornMin
 cellBornMax = cellOverpop
 
-def createCanva(canvaHeight,canvaWidth):
-    return np.zeros((canvaHeight,canvaWidth), dtype=int)
+def createCanva():
+    return np.zeros((canvaY,canvaX), dtype=int)
 
 def randomInit(canva):
     for x in np.nditer(canva, op_flags=['readwrite']):
         x[...] = random.getrandbits(1)
     return canva
     
-def lifeOrDeath(canva,x,y):
+def lifeOrDeath(canva,y,x):
     sumCell = \
-        canva[x - 1, y - 1] + canva[x + 0, y - 1]   + canva[x + 1, y - 1] + \
-        canva[x - 1, y + 0]                         + canva[x + 1, y + 0] + \
-        canva[x - 1, y + 1] + canva[x + 0, y + 1]   + canva[x + 1, y + 1]
+        canva[(y - 1)%canvaY, (x - 1)%canvaX] + canva[(y + 0)%canvaY, (x - 1)%canvaX]   + canva[(y + 1)%canvaY, (x - 1)%canvaX] + \
+        canva[(y - 1)%canvaY, (x + 0)%canvaX]                                           + canva[(y + 1)%canvaY, (x + 0)%canvaX] + \
+        canva[(y - 1)%canvaY, (x + 1)%canvaX] + canva[(y + 0)%canvaY, (x + 1)%canvaX]   + canva[(y + 1)%canvaY, (x + 1)%canvaX]
     # death by overpopulation
-    if canva[x,y] and sumCell >= cellOverpop:
+    if canva[y,x] and sumCell > cellOverpop:
         return 0
-    elif canva[x,y] and sumCell <= cellSolitude:
+    # death by isolation
+    elif canva[y,x] and sumCell < cellSolitude:
         return 0
     # born
-    elif not canva[x,y] and all([sumCell >= cellBornMin,sumCell <= cellBornMax]):
+    elif not canva[y,x] and all([sumCell > cellBornMin,sumCell <= cellBornMax]):
         return 1
     else:
-        return canva[x,y] 
-
+        return canva[y,x] 
+    
 def applyNextGen(canva):
-    canvaTmp = canva
-    for x in range(len(canva) - 1 ):
-        for y in range(len(canva[x]) - 1):
-            canvaTmp[x,y]=lifeOrDeath(canva, x, y)
+    canvaTmp = createCanva()
+    for y in range(canvaY):
+        for x in range(canvaX):
+            canvaTmp[y,x]=lifeOrDeath(canva, y, x)
+    plt.imshow(canvaTmp, animated=True)
     return canvaTmp
+    
 
-    
-    
-# def __main__():
-canva = createCanva(canvaHeight,canvaWidth)
+canva = createCanva()
 canva = randomInit(canva)
-plt.imshow(canva)
-
+plt.imshow(canva, animated=True)
 canva = applyNextGen(canva)
-plt.imshow(canva)
