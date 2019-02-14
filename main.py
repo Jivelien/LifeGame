@@ -47,27 +47,62 @@ def applyNextGen(canva):
     #plt.imshow(canvaTmp, animated=True)
     return canvaTmp
     
+def mouseControl(event,x,y,flags,param):
+    global drawing, erasing
+    if event == cv2.EVENT_LBUTTONDOWN:
+        drawing = True
+    elif event == cv2.EVENT_LBUTTONUP:
+        drawing = False
+    if event == cv2.EVENT_RBUTTONDOWN:
+        erasing = True
+    elif event == cv2.EVENT_RBUTTONUP:
+        erasing = False
+    elif event == cv2.EVENT_MOUSEMOVE:
+        if drawing:
+            canva[y//zoom, x//zoom] = 1
+        elif erasing:
+            canva[y//zoom, x//zoom] = 0 
+
+def nothing(*args):
+    pass
+
 def main():
-    init()
-    pause = False
-    canva = createCanva()
-    canva = randomInit(canva)
-    cv2.startWindowThread()
-    cv2.namedWindow("life")
-    while True:
-        cv2.imshow('life', ndimage.zoom(canva, zoom=15,order=5)*255)
+    try:
+        init()
         
-        k = cv2.waitKey(1) & 0xFF
-        if k == ord('q'):
-            cv2.destroyAllWindows()
-            break
-        elif k == ord('r'):
-            canva = randomInit(canva)
-        elif k == ord('p'):
-            pause = not pause
+        global canva, zoom, drawing, erasing
+        
+        pause = True
+        drawing, erasing = False, False
+        zoom = 15
+        canva = createCanva()
+        cv2.startWindowThread()
+        cv2.namedWindow("life")
+        
+        cv2.setMouseCallback('life',mouseControl)
+        cv2.createTrackbar('lift','life',0,5,nothing)
+        cv2.createTrackbar('sleepPeriod','life',0,1000,nothing)
+        
+        while True:
+            order = cv2.getTrackbarPos('lift','life')
+            sleepPeriod = cv2.getTrackbarPos('sleepPeriod','life')/1000
+            cv2.imshow('life', ndimage.zoom(canva, zoom=zoom,order=order)*255)
             
-        if not pause or k == ord('n'): 
-            canva = applyNextGen(canva)
-        #sleep(0.1)
-        
+            k = cv2.waitKey(1) & 0xFF
+            if k == ord('q'):
+                cv2.destroyAllWindows()
+                break
+            elif k == ord('r'):
+                canva = randomInit(canva)
+            elif k == ord('i'):
+                canva = createCanva(canva)
+            elif k == ord('p'):
+                pause = not pause
+                
+            if not pause or k == ord('n'): 
+                canva = applyNextGen(canva)
+            sleep(sleepPeriod)
+    except Exception as error:
+        print('Error: ' + str(type(error)) + ' - ' + str(error.args))
+        cv2.destroyAllWindows()
 main()
