@@ -1,5 +1,6 @@
+#!/usr/bin/python3
+
 import numpy as np
-import matplotlib.pyplot as plt
 import random
 import cv2
 from scipy import ndimage
@@ -7,8 +8,8 @@ from time import sleep
 
 def init():
     global canvaY, canvaX, cellBornMin, cellSolitude, cellBornMax, cellOverpop
-    canvaY = 50 # px
-    canvaX = 50 # px
+    canvaY = 80 # px
+    canvaX = 80 # px
     cellOverpop = 3
     cellBornMin = 2
     cellSolitude = cellBornMin
@@ -51,12 +52,16 @@ def mouseControl(event,x,y,flags,param):
     global drawing, erasing
     if event == cv2.EVENT_LBUTTONDOWN:
         drawing = True
+        canva[y//zoom, x//zoom] = 1
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
-    if event == cv2.EVENT_RBUTTONDOWN:
+        
+    elif event == cv2.EVENT_RBUTTONDOWN:
         erasing = True
+        canva[y//zoom, x//zoom] = 0 
     elif event == cv2.EVENT_RBUTTONUP:
         erasing = False
+    
     elif event == cv2.EVENT_MOUSEMOVE:
         if drawing:
             canva[y//zoom, x//zoom] = 1
@@ -69,23 +74,23 @@ def nothing(*args):
 def main():
     try:
         init()
-        
         global canva, zoom, drawing, erasing
-        
+
         pause = True
         drawing, erasing = False, False
-        zoom = 15
+        zoom = 900//canvaY
         canva = createCanva()
         cv2.startWindowThread()
         cv2.namedWindow("life")
+        cv2.namedWindow("param")
         
         cv2.setMouseCallback('life',mouseControl)
-        cv2.createTrackbar('lift','life',0,5,nothing)
-        cv2.createTrackbar('sleepPeriod','life',0,1000,nothing)
+        cv2.createTrackbar('lift','param',0,5,nothing)
+        cv2.createTrackbar('sleepPeriod','param',0,500,nothing)
         
         while True:
-            order = cv2.getTrackbarPos('lift','life')
-            sleepPeriod = cv2.getTrackbarPos('sleepPeriod','life')/1000
+            order = cv2.getTrackbarPos('lift','param')
+            sleepPeriod = cv2.getTrackbarPos('sleepPeriod','param')/1000
             cv2.imshow('life', ndimage.zoom(canva, zoom=zoom,order=order)*255)
             
             k = cv2.waitKey(1) & 0xFF
@@ -95,13 +100,14 @@ def main():
             elif k == ord('r'):
                 canva = randomInit(canva)
             elif k == ord('i'):
-                canva = createCanva(canva)
+                canva = createCanva()
             elif k == ord('p'):
                 pause = not pause
                 
             if not pause or k == ord('n'): 
                 canva = applyNextGen(canva)
-            sleep(sleepPeriod)
+            if not any([drawing,erasing]):
+                sleep(sleepPeriod)
     except Exception as error:
         print('Error: ' + str(type(error)) + ' - ' + str(error.args))
         cv2.destroyAllWindows()
