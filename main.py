@@ -1,19 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import cv2
+from scipy import ndimage
+from time import sleep
 
-
-global canvaY, canvaX, cellBornMin, cellBornMax, cellOverpop
-
-canvaY = 50 # px
-canvaX = 50 # px
-cellOverpop = 3
-cellBornMin = 2
-cellSolitude = cellBornMin
-cellBornMax = cellOverpop
+def init():
+    global canvaY, canvaX, cellBornMin, cellSolitude, cellBornMax, cellOverpop
+    canvaY = 50 # px
+    canvaX = 50 # px
+    cellOverpop = 3
+    cellBornMin = 2
+    cellSolitude = cellBornMin
+    cellBornMax = cellOverpop
 
 def createCanva():
-    return np.zeros((canvaY,canvaX), dtype=int)
+    return np.zeros((canvaY,canvaX), dtype='uint8')
 
 def randomInit(canva):
     for x in np.nditer(canva, op_flags=['readwrite']):
@@ -42,11 +44,30 @@ def applyNextGen(canva):
     for y in range(canvaY):
         for x in range(canvaX):
             canvaTmp[y,x]=lifeOrDeath(canva, y, x)
-    plt.imshow(canvaTmp, animated=True)
+    #plt.imshow(canvaTmp, animated=True)
     return canvaTmp
     
-
-canva = createCanva()
-canva = randomInit(canva)
-plt.imshow(canva, animated=True)
-canva = applyNextGen(canva)
+def main():
+    init()
+    pause = False
+    canva = createCanva()
+    canva = randomInit(canva)
+    cv2.startWindowThread()
+    cv2.namedWindow("life")
+    while True:
+        cv2.imshow('life', ndimage.zoom(canva, zoom=15,order=5)*255)
+        
+        k = cv2.waitKey(1) & 0xFF
+        if k == ord('q'):
+            cv2.destroyAllWindows()
+            break
+        elif k == ord('r'):
+            canva = randomInit(canva)
+        elif k == ord('p'):
+            pause = not pause
+            
+        if not pause or k == ord('n'): 
+            canva = applyNextGen(canva)
+        #sleep(0.1)
+        
+main()
