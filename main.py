@@ -10,11 +10,12 @@ import glob
 import moviepy.editor as mpy
 import threading
 import shutil
+import subprocess
 
 def init():
     global canvaY, canvaX, cellBornMin, cellSolitude, cellBornMax, cellOverpop
-    canvaY = 50 # px
-    canvaX = 70 # px
+    canvaY = 100 # px
+    canvaX = 100 # px
     cellOverpop = 3
     cellBornMin = 2
     cellSolitude = cellBornMin
@@ -88,8 +89,10 @@ def createGif(canvas):
     filenames = glob.glob("./"+directory+"/*.png")
     filenames.sort()
     clip = mpy.ImageSequenceClip(filenames, fps=10)
-    clip.write_gif('lifegame'+str(int(time()))+'.gif', fps=10)
+    filename='lifegame'+str(int(time()))+'.gif'
+    clip.write_gif(filename, fps=10)
     shutil.rmtree(directory)
+    subprocess.run(["gifsicle", "-i", filename, "-O3", "--colors", "4", "-o", filename])
     
 def nothing(*args):
     pass
