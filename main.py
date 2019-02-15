@@ -8,6 +8,8 @@ from time import sleep, time
 import os
 import glob
 import moviepy.editor as mpy
+import threading
+import shutil
 
 def init():
     global canvaY, canvaX, cellBornMin, cellSolitude, cellBornMax, cellOverpop
@@ -87,7 +89,7 @@ def createGif(canvas):
     filenames.sort()
     clip = mpy.ImageSequenceClip(filenames, fps=10)
     clip.write_gif('lifegame'+str(int(time()))+'.gif', fps=10)
-    os.rmdir(directory)
+    shutil.rmtree(directory)
     
 def nothing(*args):
     pass
@@ -139,14 +141,15 @@ def main():
                 pause = not pause
             elif k == ord('s'):
                 save = not save
+                if not save:
+                    threading.Thread(target=createGif, args=[canvas]).start()           
+                    canvas=[]
             if not pause or k == ord('n'): 
                 canva = applyNextGen(canva)
                 i+=1
             if not any([drawing,erasing]):
                 sleep(sleepPeriod)
             
-        if len(canvas) != 0:
-            createGif(canvas)
     except Exception as error:
         print('Error: ' + str(type(error)) + ' - ' + str(error.args))
         cv2.destroyAllWindows()
