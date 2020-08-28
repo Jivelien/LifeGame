@@ -14,8 +14,8 @@ import subprocess
 
 def init():
     global canvaY, canvaX, cellBornMin, cellSolitude, cellBornMax, cellOverpop
-    canvaY = 100 # px
-    canvaX = 100 # px
+    canvaY = 50 # px
+    canvaX = 80 # px
     cellOverpop = 3
     cellBornMin = 2
     cellSolitude = cellBornMin
@@ -28,7 +28,7 @@ def randomInit(canva):
     for x in np.nditer(canva, op_flags=['readwrite']):
         x[...] = random.getrandbits(1)
     return canva
-    
+
 def lifeOrDeath(canva,y,x):
     sumCell = \
         canva[(y - 1)%canvaY, (x - 1)%canvaX] + canva[(y + 0)%canvaY, (x - 1)%canvaX]   + canva[(y + 1)%canvaY, (x - 1)%canvaX] + \
@@ -57,7 +57,7 @@ def applyNextGen(canva):
 def mouseControl(event,x,y,flags,param):
     global drawing, erasing
     if event == cv2.EVENT_LBUTTONDOWN:
-        drawing = True
+        drawing, erasing = True, False
         canva[y//zoom, x//zoom] = 1
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
@@ -109,12 +109,13 @@ def main():
         zoom = min(1700//canvaX, 900//canvaY)
         canva = createCanva()
         cv2.startWindowThread()
-        cv2.namedWindow("life")
+        cv2.namedWindow("life", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("life",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
         
         cv2.setMouseCallback('life',mouseControl)
         cv2.createTrackbar('lift','life',0,5,nothing)
         cv2.createTrackbar('sleepPeriod','life',0,500,nothing)
-        cv2.setTrackbarPos('sleepPeriod','life',100)
+        #cv2.setTrackbarPos('sleepPeriod','life',100)
         
         while True:
             order = cv2.getTrackbarPos('lift','life')
